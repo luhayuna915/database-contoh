@@ -419,7 +419,7 @@
         });
         var esriSatelitLayer = L.tileLayer.provider("Esri.WorldImagery");
 
-        esriSatelitLayer.addTo(map);
+        osmLayer.addTo(map);
 
         // fungsi untuk mengatur style data geojson
         function styleGeojson(feature) {
