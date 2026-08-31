@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Control Visual Komponen -->
+    <style>
+        html,
+        body {
+            overflow: hidden;
+        }
+
+        /* ===  H E A D E R  === */
+        header {
+            display: flex;
+            position: fixed;
+            height: 50px;
+            width: 100%;
+            /* Memastikan header berada di lapisan paling atas */
+            z-index: 1000;
+            background-color: #0d41e1;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-icon {
+            display: flex;
+            width: 40px;
+            height: 50px;
+            align-items: center;
+            justify-content: center;
+            /* border-right: 2px solid #000000; */
+            background-color: #31393c;
+        }
+
+        .menu-icon a i {
+            color: #fdca40;
+        }
+
+        .title-header {
+            padding-left: 10px;
+            color: #fdca40;
+        }
+
+        /* ===  H E A D E R  === */
+
+        /* Pembungkus Utama Layar Utuh */
+        .main-container {
+            display: flex;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 50px);
+            overflow: hidden;
+        }
+
+        /* ===  S I D E B A R  === */
+        .sidebar {
+            display: flex;
+            position: fixed;
+            /* Start posisi tepat di bawah tinggi header */
+            width: 40px;
+            height: 100%;
+            /* Tambahkan scroll khusus sidebar jika menu sangat banyak */
+            overflow-y: auto;
+            z-index: 500;
+            background-color: #31393c;
+            /* Menyusun nav dan panel-menu ke bawah */
+            flex-direction: column;
+            /* Menggeser seluruh elemen anak (termasuk <nav>) ke tengah horizontal */
+            align-items: center;
+            /* border-right: 2px solid #000000; */
+        }
+
+        .sidebar ul {
+            /* Menghilangkan titik (bullet points) */
+            list-style: none;
+            /* Menghilangkan sisa ruang geser bawaan list */
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .sidebar ul li a i {
+            color: #fdca40;
+        }
+
+        /* ===  S I D E B A R  === */
+
+        /* ===  P A N E L  S I D E B A R  === */
+        /* template panel menu */
+        .panel-menu {
+            /* Sembunyikan semua panel menu secara default */
+            display: none;
+            position: fixed;
+            /* Start posisi tepat di bawah tinggi header */
+            top: 50px;
+            left: 40px;
+            width: 250px;
+            height: calc(100vh - 50px);
+            /* Tambahkan scroll khusus sidebar jika menu sangat banyak */
+            overflow-y: auto;
+            z-index: 500;
+            background-color: rgb(137, 171, 201);
+        }
+
+        /* Tampilkan panel hanya jika kelas 'active' ditempelkan oleh JavaScript */
+        .panel-menu.active {
+            display: block;
+        }
+
+        .header-panel-menu {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            position: fixed;
+            /* Start posisi tepat di bawah tinggi header */
+            top: 50px;
+            left: 40px;
+            width: 250px;
+            height: 35px;
+            overflow-y: hidden;
+            z-index: 500;
+            background-color: rgb(244, 246, 248);
+            /* border-bottom: 1px solid #e0e0e0 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+        }
+
+        .header-panel-menu h5 {
+            margin: 0;
+            padding: 0;
+        }
+
+        .konten-panel-menu {
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 20px;
+            /* Start posisi tepat di bawah tinggi header */
+            top: 85px;
+            left: 40px;
+            width: 250px;
+            height: calc(100vh - 85px);
+            /* Tambahkan scroll khusus sidebar jika menu sangat banyak */
+            overflow-y: auto;
+            z-index: 10;
+            background-color: rgb(244, 246, 248);
+        }
+
+        .btn-close {
+            background: none !important;
+            /* Menghapus SVG bawaan Bootstrap */
+            border: none;
+            font-size: 1.5rem;
+            line-height: 1;
+            color: #000000 !important;
+            /* Paksa warna hitam agar tidak dicoret */
+            opacity: 0.8;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+            color: #ff0000 !important;
+        }
+
+        /* Styles for the dropdown */
+        details {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            width: 200px;
+            height: fit-content;
+            margin-top: 7px;
+            margin-bottom: 7px;
+        }
+
+        summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            padding: 10px;
+            cursor: pointer;
+            outline: none;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .layer-item {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            font-size: 13px;
+            align-items: center;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            /* margin-right: 5px; */
+            align-items: center;
+        }
+
+        .dropdown-content {
+            padding: 10px 15px 5px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* ===  P A N E L  S I D E B A R  === */
+
+        /* ===  M A P  === */
+        #map {
+            flex: 1;
+            position: fixed;
+            height: calc(100vh - 50px);
+            /* width: 100%; */
+            width: calc(100% - 40px);
+            top: 50px;
+            /* bottom: 0; */
+            left: 40px;
+        }
+
+        /* ===  M A P  === */
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="menu-icon">
+                <a href=""><i class="fa-solid fa-bars"></i></a>
+            </div>
+            <div>
+                <span class="title-header h3">Komponen Header</span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="main-container">
+
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <!-- Manggil panel-layer-menu -->
+                    <li><a href="#" data-target="panel-layer"><i class="fa-solid fa-layer-group"></i></a></li>
+                    <!-- Manggil panel-filter-menu -->
+                    <li><a href="#" data-target="panel-filter"><i class="fa-solid fa-filter"></i></a></li>
+                </ul>
+            </nav>
+            <div class="panel-menu" id="panel-layer">
+                <div class="header-panel-menu">
+                    <h5>Layer</h5>
+                    <button class="btn-close" aria-label="Close">&times;</button>
+
+                </div>
+
+                <div class="konten-panel-menu">
+                    <!-- <details>
+                        <summary>Basemap <i class="fas fa-chevron-down"></i></summary>
+                        <div class="checkbox-group dropdown-content">
+                            <div class="layer-item">
+                                <label>
+                                    <input type="checkbox" name="basemap" value="imagery"> Imagery
+                                </label>
+                            </div>
+                            <div class="layer-item">
+                                <label>
+                                    <input type="checkbox" name="basemap" value="osm"> Openstreetmap
+                                </label>
+                            </div>
+                        </div>
+                    </details> -->
+
+                    <details>
+                        <summary>Garis Pantai <i class="fas fa-chevron-down"></i></summary>
+                        <div class="checkbox-group dropdown-content">
+                            <div class="layer-item">
+                                <label>
+                                    <input type="checkbox" name="overlay" value="gpbali"> Garis Pantai Bali
+                                </label>
+                            </div>
+                            <div class="layer-item">
+                                <label>
+                                    <input type="checkbox" name="overlay" value="gpdiy"> Garis Pantai DIY
+                                </label>
+                            </div>
+                            <div class="layer-item">
+                                <label>
+                                    <input type="checkbox" name="overlay" value="gpjb"> Garis Pantai Jawa Barat
+                                </label>
+                            </div>
+                        </div>
+                    </details>
+
+                </div>
+            </div>
+
+            <div class="panel-menu" id="panel-filter">
+                <div class="header-panel-menu">
+                    <h5>Filter</h5>
+                    <button class="btn-close" aria-label="Close">&times;</button>
+
+                </div>
+
+                <div class="konten-panel-menu">
+
+                </div>
+            </div>
+        </aside>
+
+        <!-- Komponen Page Web -->
+        <div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Script Sources -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+    <!-- 2. Wajib: Tambahkan Leaflet Providers CDN di bawahnya -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-providers/1.13.0/leaflet-providers.min.js"></script>
+
+
+    <!-- Control Page -->
+    <script>
+
+        // A. Ambil semua tombol navigasi dan panel menu
+        const navLinks = document.querySelectorAll('nav ul li a[data-target]');
+        const panelMenus = document.querySelectorAll('.panel-menu');
+        const closeButtons = document.querySelectorAll('.btn-close');
+
+        // B. Event untuk Tombol Navigasi Sidebar (Buka/Tutup Panel)
+        navLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault(); // Mencegah loncatan halaman akibat href="#"
+
+                // // 1. Ambil ID target dari atribut data-target (contoh: "panel-layer")
+                // const targetId = this.getAttribute('data-target');
+                // const targetPanel = document.getElementById(targetId);
+
+                // // 2. Cek apakah panel target saat ini sudah aktif atau belum
+                // const isAlreadyActive = targetPanel.classList.contains('active');
+
+                // // 3. Sembunyikan SEMUA panel terlebih dahulu (supaya tidak menumpuk)
+                // panelMenus.forEach(panel => panel.classList.remove('active'));
+
+                // // 4. Jika panel yang diklik tadinya BELUM aktif, aktifkan sekarang
+                // // (Jika tadinya SUDAH aktif, langkah ke-3 otomatis membuatnya tertutup)
+                // if (!isAlreadyActive) {
+                //     targetPanel.classList.add('active');
+                // }
+                const targetId = this.getAttribute('data-target');
+                const targetPanel = document.getElementById(targetId);
+                const isAlreadyActive = targetPanel.classList.contains('active');
+
+                panelMenus.forEach(panel => panel.classList.remove('active'));
+
+                if (!isAlreadyActive) {
+                    targetPanel.classList.add('active');
+                }
+
+                // KUNCI: Beri tahu Leaflet untuk menghitung ulang ukuran kanvas peta
+                // Berikan sedikit delay (misal 100ms) jika kamu menggunakan animasi/transisi CSS
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+
+            });
+        });
+
+        // C. Event untuk Tombol Silang / Close (Tutup Panel)
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                // .closest('.panel-menu') mencari elemen induk terdekat yang merupakan panel menu
+                const parentPanel = this.closest('.panel-menu');
+                if (parentPanel) {
+                    parentPanel.classList.remove('active');
+                }
+            });
+        });
+
+        // A. Menampilkan Peta pada DIV 'map'
+        var defaultLat = -7.8378057;
+        var defaultLng = 110.2641002;
+        var defaultZoom = 10;
+        var map = L.map("map").setView([defaultLat, defaultLng], defaultZoom);
+
+        var esriGrayCanvas = L.tileLayer.provider("Esri.WorldGrayCanvas");
+        var osmLayer = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution:
+                '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        });
+        var esriSatelitLayer = L.tileLayer.provider("Esri.WorldImagery");
+
+        esriSatelitLayer.addTo(map);
+
+        // fungsi untuk mengatur style data geojson
+        function styleGeojson(feature) {
+            return {
+                fillColor: "#e74c3c",   // Warna isian
+                weight: 4,              // Ketebalan garis tepi
+                opacity: 1,             // Transparansi garis
+                color: '#111111',       // Warna garis tepi
+                fillOpacity: 0.6        // Transparansi isian
+            };
+        }
+
+        // deklarasi variabel url
+        // const urlDataGeoJSON = "https://raw.githubusercontent.com/luhayuna915/database-contoh/refs/heads/main/WebGIS-PRP3K/Geospasial/Garis-Pantai/GPDIY.geojson";
+
+        // const layerGeoJSON = new L.GeoJSON.AJAX(urlDataGeoJSON, {
+        //     style: styleGeojson
+        // });
+
+        // layerGeoJSON.addTo(map);
+
+        // 1. Simpan SEMUA link dalam 1 variabel Array
+        // const daftarLinkGeoJSON = [
+        //     "https://raw.githubusercontent.com/luhayuna915/database-contoh/refs/heads/main/WebGIS-PRP3K/Geospasial/Garis-Pantai/GPBali.geojson",
+        //     "https://raw.githubusercontent.com/luhayuna915/database-contoh/refs/heads/main/WebGIS-PRP3K/Geospasial/Garis-Pantai/GPDIY.geojson",
+        //     "https://raw.githubusercontent.com/luhayuna915/database-contoh/refs/heads/main/WebGIS-PRP3K/Geospasial/Garis-Pantai/GPJB.geojson"
+        // ];
+
+        // // 2. Lakukan looping (perulangan) otomatis
+        // daftarLinkGeoJSON.forEach(url => {
+        //     new L.GeoJSON.AJAX(url, {
+        //         style: styleGeojson // fungsi style yang sama untuk semua layer
+        //     }).addTo(map);
+        // });
+
+        // B. Wadah Menyimpan Objek Layer (Key disesuaikan dengan 'value' di HTML)
+        const layers = {
+            "gpbali": new L.GeoJSON.AJAX("https://raw.githubusercontent.com/luhayuna915/database-contoh/refs/heads/main/WebGIS-PRP3K/Geospasial/Garis-Pantai/GPBali.geojson", {
+                style: { color: "#e74c3c", weight: 3 }
+            }),
+            "gpdiy": new L.GeoJSON.AJAX("https://raw.githubusercontent.com/luhayuna915/database-contoh/refs/heads/main/WebGIS-PRP3K/Geospasial/Garis-Pantai/GPDIY.geojson", {
+                style: { color: "#000000", weight: 3 } // Garis hitam seperti di gambar
+            }),
+            "gpjb": new L.GeoJSON.AJAX("https://raw.githubusercontent.com/luhayuna915/database-contoh/refs/heads/main/WebGIS-PRP3K/Geospasial/Garis-Pantai/GPJB.geojson", {
+                style: { color: "#2ecc71", weight: 3 }
+            })
+        };
+
+        // C. Panggil Semua Checkbox Berdasarkan 'name="overlay"'
+        const checkboxes = document.querySelectorAll('input[name="overlay"]');
+
+        // D. Hubungkan Event Listener ke Setiap Checkbox secara Otomatis
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                // 1. Ambil nilai value (contoh: 'gpdiy')
+                const layerKey = this.value;
+
+                // 2. Ambil objek layer Leaflet yang sesuai dari wadah 'layers'
+                const selectedLayer = layers[layerKey];
+
+                // 3. Cek apakah layer-nya ada di wadah
+                if (selectedLayer) {
+                    if (this.checked) {
+                        // Jika checkbox dicentang -> Tampilkan ke peta
+                        map.addLayer(selectedLayer);
+                    } else {
+                        // Jika centang dilepas -> Hapus dari peta
+                        map.removeLayer(selectedLayer);
+                    }
+                }
+            });
+        });
+
+    </script>
+
+</body>
+
+</html>
